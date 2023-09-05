@@ -1,0 +1,36 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "mentoring-adf-ot"
+		},
+		"LS_SQL_DataMart_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-ot.database.windows.net;Initial Catalog=DataMart;User ID=oleksandr"
+		},
+		"LS_SQL_Local_connectionString": {
+			"value": "Integrated Security=False;Data Source=EPPLWARW0229\\MSSQLSERVERDEV;Initial Catalog=CinemaTickets;User ID=oleksandr"
+		},
+		"LS_SQL_azure_mentoring_ot_database_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-ot.database.windows.net;Initial Catalog=movies;User ID=etl"
+		},
+		"LS_ABLB_azurementoringauot_properties_typeProperties_serviceEndpoint": {
+			"value": "https://azurementoringauot.blob.core.windows.net/"
+		},
+		"LS_ABLB_azurementoringdatalakeot_movies_sasUri": {
+			"value": ""
+		},
+		"LS_ABLB_azurementoringdatalakeot_movies_properties_typeProperties_sasToken_secretName": {
+			"value": "azurementoringstorageot-movies-sas-token"
+		},
+		"LS_ABLB_azurementoringstorageot_online_properties_typeProperties_sasUri_secretName": {
+			"value": "azurementoringstorageot-online-sas-url"
+		},
+		"LS_ADLS_azurementoringdatalakeot_properties_typeProperties_url": {
+			"value": "https://azurementoringdatalakeot.dfs.core.windows.net/"
+		},
+		"LS_AKV_mentoring_key_vault_ot_properties_typeProperties_baseUrl": {
+			"value": "https://mentoring-key-vault-ot.vault.azure.net/"
+		}
+	}
+}

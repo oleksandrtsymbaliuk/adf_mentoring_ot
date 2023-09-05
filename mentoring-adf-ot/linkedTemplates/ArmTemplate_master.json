@@ -1,0 +1,168 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "mentoring-adf-ot"
+		},
+		"LS_SQL_DataMart_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQL_DataMart'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-ot.database.windows.net;Initial Catalog=DataMart;User ID=oleksandr"
+		},
+		"LS_SQL_Local_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQL_Local'",
+			"defaultValue": "Integrated Security=False;Data Source=EPPLWARW0229\\MSSQLSERVERDEV;Initial Catalog=CinemaTickets;User ID=oleksandr"
+		},
+		"LS_SQL_azure_mentoring_ot_database_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQL_azure_mentoring_ot_database'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-ot.database.windows.net;Initial Catalog=movies;User ID=etl"
+		},
+		"LS_ABLB_azurementoringauot_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://azurementoringauot.blob.core.windows.net/"
+		},
+		"LS_ABLB_azurementoringdatalakeot_movies_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'LS_ABLB_azurementoringdatalakeot_movies'"
+		},
+		"LS_ABLB_azurementoringdatalakeot_movies_properties_typeProperties_sasToken_secretName": {
+			"type": "string",
+			"defaultValue": "azurementoringstorageot-movies-sas-token"
+		},
+		"LS_ABLB_azurementoringstorageot_online_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "azurementoringstorageot-online-sas-url"
+		},
+		"LS_ADLS_azurementoringdatalakeot_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://azurementoringdatalakeot.dfs.core.windows.net/"
+		},
+		"LS_AKV_mentoring_key_vault_ot_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://mentoring-key-vault-ot.vault.azure.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "mentoring-adf-ot_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_SQL_DataMart_connectionString": {
+						"value": "[parameters('LS_SQL_DataMart_connectionString')]"
+					},
+					"LS_SQL_Local_connectionString": {
+						"value": "[parameters('LS_SQL_Local_connectionString')]"
+					},
+					"LS_ABLB_azurementoringauot_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('LS_ABLB_azurementoringauot_properties_typeProperties_serviceEndpoint')]"
+					},
+					"LS_ADLS_azurementoringdatalakeot_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_azurementoringdatalakeot_properties_typeProperties_url')]"
+					},
+					"LS_AKV_mentoring_key_vault_ot_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LS_AKV_mentoring_key_vault_ot_properties_typeProperties_baseUrl')]"
+					},
+					"LS_ABLB_azurementoringdatalakeot_movies_sasUri": {
+						"value": "[parameters('LS_ABLB_azurementoringdatalakeot_movies_sasUri')]"
+					},
+					"LS_ABLB_azurementoringdatalakeot_movies_properties_typeProperties_sasToken_secretName": {
+						"value": "[parameters('LS_ABLB_azurementoringdatalakeot_movies_properties_typeProperties_sasToken_secretName')]"
+					},
+					"LS_ABLB_azurementoringstorageot_online_properties_typeProperties_sasUri_secretName": {
+						"value": "[parameters('LS_ABLB_azurementoringstorageot_online_properties_typeProperties_sasUri_secretName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "mentoring-adf-ot_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_SQL_azure_mentoring_ot_database_connectionString": {
+						"value": "[parameters('LS_SQL_azure_mentoring_ot_database_connectionString')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mentoring-adf-ot_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "mentoring-adf-ot_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mentoring-adf-ot_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "mentoring-adf-ot_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mentoring-adf-ot_ArmTemplate_2')]"
+			]
+		}
+	]
+}
