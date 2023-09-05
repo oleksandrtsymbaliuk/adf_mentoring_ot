@@ -1,0 +1,70 @@
+{
+	"name": "DS_SQL_tControlMetadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_azure_mentoring_ot_database",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Module 9"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "source_path_container",
+				"type": "varchar"
+			},
+			{
+				"name": "source_path_folder",
+				"type": "varchar"
+			},
+			{
+				"name": "source_path_filename",
+				"type": "varchar"
+			},
+			{
+				"name": "source_file_column_delimiter",
+				"type": "varchar"
+			},
+			{
+				"name": "source_file_encoding",
+				"type": "varchar"
+			},
+			{
+				"name": "source_file_escape_character",
+				"type": "varchar"
+			},
+			{
+				"name": "source_file_quote_character",
+				"type": "varchar"
+			},
+			{
+				"name": "target_schema",
+				"type": "varchar"
+			},
+			{
+				"name": "target_table",
+				"type": "varchar"
+			},
+			{
+				"name": "copy_settings_diu",
+				"type": "varchar"
+			},
+			{
+				"name": "copy_settings_mapping",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "etl",
+			"table": "tControlMetadata"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

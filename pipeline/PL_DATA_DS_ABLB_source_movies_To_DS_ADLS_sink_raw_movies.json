@@ -1,0 +1,186 @@
+{
+	"name": "PL_DATA_DS_ABLB_source_movies_To_DS_ADLS_sink_raw_movies",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_GEN_SETVAR_Timestamp",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "timestamp",
+					"value": {
+						"value": "@formatDateTime(utcnow(), 'yyyyMMddHHmmss')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ACT_GEN_META_ListOfFiles",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_SETVAR_Timestamp",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ABLB_source",
+						"type": "DatasetReference",
+						"parameters": {
+							"file_name": "*",
+							"directory_name": "/",
+							"container_name": "movies"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ACT_ITRC_FOR_EachFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_META_ListOfFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('ACT_GEN_META_ListOfFiles').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "ACT_MT_Copy_SourceToSink",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS_azurementoringdatalakeot",
+											"type": "LinkedServiceReference"
+										},
+										"path": "log"
+									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ABLB_source",
+									"type": "DatasetReference",
+									"parameters": {
+										"file_name": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"directory_name": "/",
+										"container_name": "movies"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"file_name": {
+											"value": "@concat(\nsubstring(item().name, 0, lastIndexOf(item().name, '.')),\n'_', \nvariables('timestamp'),\nsubstring(item().name, lastIndexOf(item().name, '.'), sub(length(item().name), lastIndexOf(item().name, '.')))\n)",
+											"type": "Expression"
+										},
+										"directory_name": "movies",
+										"container_name": "raw"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"timestamp": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Previous modules"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-25T09:19:04Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

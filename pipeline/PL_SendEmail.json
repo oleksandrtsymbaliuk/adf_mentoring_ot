@@ -1,0 +1,79 @@
+{
+	"name": "PL_SendEmail",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetSecret",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": true,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.URI_of_secret_URL",
+						"type": "Expression"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			},
+			{
+				"name": "SendEmail",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "GetSecret",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": true
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@activity('GetSecret').output.value",
+						"type": "Expression"
+					},
+					"method": "POST",
+					"body": {
+						"value": "@json(concat('{\"message\" : \"', pipeline().parameters.email_message, '\",\n    \"dataFactoryName\" : \"', pipeline().DataFactory, '\", \n    \"pipelineName\" : \"', pipeline().parameters.pipeline_name, '\", \n    \"receiver\" : \"', pipeline().parameters.email_receiver, '\"\n   }'))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pipeline_name": {
+				"type": "string"
+			},
+			"email_receiver": {
+				"type": "string"
+			},
+			"email_message": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Module 11"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-05T09:51:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

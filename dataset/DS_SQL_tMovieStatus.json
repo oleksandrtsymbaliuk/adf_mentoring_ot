@@ -1,0 +1,36 @@
+{
+	"name": "DS_SQL_tMovieStatus",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_azure_mentoring_ot_database",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Module 8"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "MovieStatusId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "MovieStatusName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CreatedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "tMovieStatus"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

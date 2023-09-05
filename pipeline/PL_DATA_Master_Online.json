@@ -1,0 +1,66 @@
+{
+	"name": "PL_DATA_Master_Online",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_GEN_EPIPE_Blob_To_ADLS",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ABLB_online_To_ADLS_online",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_ADLS_To_SQL",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_Blob_To_ADLS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ADLS_To_DS_SQL_Online",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_ADLS_To_Archive",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_ADLS_To_SQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ADLS_online_archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Previous modules"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-25T09:19:04Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

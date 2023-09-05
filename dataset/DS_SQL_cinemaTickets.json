@@ -1,0 +1,63 @@
+{
+	"name": "DS_SQL_cinemaTickets",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_azure_mentoring_ot_database",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Previous modules"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "MovieId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CinemaId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TicketCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TicketPrice",
+				"type": "decimal",
+				"precision": 4,
+				"scale": 1
+			},
+			{
+				"name": "TransactionId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "TransactionDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "CreatedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "stg",
+			"table": "cinema_tickets"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

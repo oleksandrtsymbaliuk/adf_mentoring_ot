@@ -1,0 +1,19 @@
+{
+	"name": "LS_SQL_DataMart",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-ot.database.windows.net;Initial Catalog=DataMart;User ID=oleksandr",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV_mentoring_key_vault_ot",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "azure-mentoring-ot-database-oleksandr-password"
+			}
+		}
+	}
+}

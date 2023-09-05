@@ -1,0 +1,26 @@
+{
+	"name": "PL_Fail",
+	"properties": {
+		"activities": [
+			{
+				"name": "Fail1",
+				"type": "Fail",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"message": {
+						"value": "@concat('Failed. Pipeline name: ', pipeline().Pipeline, '. Run ID: ', pipeline().RunId)",
+						"type": "Expression"
+					},
+					"errorCode": "-1"
+				}
+			}
+		],
+		"folder": {
+			"name": "Module 10"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-01T10:12:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

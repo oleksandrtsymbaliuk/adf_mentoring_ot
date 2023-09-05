@@ -1,0 +1,37 @@
+{
+	"name": "PL_DATA_DS_SQL_To_DS_SQL_DIM",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_MT_DF_PopulateDimTables",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ACT_MT_DF_PopulateDimTables",
+						"type": "DataFlowReference"
+					},
+					"integrationRuntime": {
+						"referenceName": "Azure-IR-M8",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "Module 08"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-25T09:19:04Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

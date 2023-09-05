@@ -1,0 +1,27 @@
+{
+	"name": "DS_ABLB_AU_ratings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_azurementoringauot",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Previous modules"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "ratings.csv",
+				"container": "data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

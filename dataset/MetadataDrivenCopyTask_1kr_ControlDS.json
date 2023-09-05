@@ -1,0 +1,20 @@
+{
+	"name": "MetadataDrivenCopyTask_1kr_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQL_azure_mentoring_ot_database",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MetadataDrivenCopyTask_1kr_20230824"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MainControlTable_1kr"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

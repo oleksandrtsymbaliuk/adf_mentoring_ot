@@ -1,0 +1,17 @@
+{
+	"name": "mentoring-adf-ot",
+	"properties": {
+		"globalParameters": {
+			"URI_of_secret_URL": {
+				"type": "string",
+				"value": "https://mentoring-key-vault-ot.vault.azure.net/secrets/azure-logc-app-hhtp-post/a3fb6f031a7d4bff83ccc4f0b89053a1?api-version=7.0"
+			}
+		}
+	},
+	"location": "francecentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "13d7a99a-50e6-47b5-a5dd-10621e66a249",
+		"tenantId": "b41b72d0-4e9f-4c26-8a69-f949f367c91d"
+	}
+}

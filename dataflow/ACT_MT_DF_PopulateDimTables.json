@@ -1,0 +1,366 @@
+{
+	"name": "ACT_MT_DF_PopulateDimTables",
+	"properties": {
+		"folder": {
+			"name": "Module 08"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tMovies",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetMovies"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tMovieStatus",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetMovieStatus"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetOnlineService"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDimOnlineService"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDimMovie"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimMovie"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimOnlineService1"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimOnlineService2"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimMovie2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "addNewColumns1"
+				},
+				{
+					"name": "addMovieStatusName"
+				},
+				{
+					"name": "selectColumns"
+				},
+				{
+					"name": "selectColumns2"
+				},
+				{
+					"name": "AlterRow2"
+				},
+				{
+					"name": "joinDimOnlineService"
+				},
+				{
+					"name": "splitUpdateCondition"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedUpdateTime"
+				},
+				{
+					"name": "alterRow3"
+				},
+				{
+					"name": "alterRow4"
+				},
+				{
+					"name": "joinDimMovie"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "alterRow5"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          MovieId as integer,",
+				"          MovieIdNK as integer,",
+				"          Budget as integer,",
+				"          HomepagePath as string,",
+				"          Title as string,",
+				"          OriginalTitle as string,",
+				"          ReleaseDate as date,",
+				"          Revenue as long,",
+				"          Runtime as integer,",
+				"          MovieStatusId as integer,",
+				"          AvgVote as decimal(3,1),",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp,",
+				"          SrcFileName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     waterMarkColumn: 'ModifiedDate',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetMovies",
+				"source(output(",
+				"          MovieStatusId as integer,",
+				"          MovieStatusName as string,",
+				"          CreatedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetMovieStatus",
+				"source(output(",
+				"          ServiceId as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     waterMarkColumn: 'ModifiedDate',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetOnlineService",
+				"source(output(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceDimOnlineService",
+				"source(output(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatus as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceDimMovie",
+				"selectColumns derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC(),",
+				"          InsertOrUpdate = iif(isNull(Target_MovieIdNK), 'Insert', 'Update')) ~> addNewColumns1",
+				"sourcetMovies, sourcetMovieStatus lookup(sourcetMovies@MovieStatusId == sourcetMovieStatus@MovieStatusId,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> addMovieStatusName",
+				"joinDimMovie select(mapColumn(",
+				"          MovieId,",
+				"          MovieIdNK = sourcetMovies@MovieIdNK,",
+				"          Budget,",
+				"          HomepagePath,",
+				"          Title = sourcetMovies@Title,",
+				"          OriginalTitle,",
+				"          ReleaseDate = sourcetMovies@ReleaseDate,",
+				"          Revenue,",
+				"          Runtime = sourcetMovies@Runtime,",
+				"          MovieStatusId = sourcetMovies@MovieStatusId,",
+				"          AvgVote,",
+				"          SrcFileName,",
+				"          MovieStatusName,",
+				"          MovieIdNK = sourceDimMovie@MovieIdNK,",
+				"          MovieStatus,",
+				"          Target_CreatedDate = sourceDimMovie@CreatedDate,",
+				"          Target_ModifiedDate = sourceDimMovie@ModifiedDate,",
+				"          Target_MovieIdNK = sourceDimMovie@MovieIdNK",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectColumns",
+				"joinDimOnlineService select(mapColumn(",
+				"          ServiceId,",
+				"          ServiceCode = sourcetOnlineService@ServiceCode,",
+				"          ServiceName = sourcetOnlineService@ServiceName,",
+				"          Target_ServiceCode = sourceDimOnlineService@ServiceCode,",
+				"          Target_CreatedDate = sourceDimOnlineService@CreatedDate,",
+				"          Target_ModifiedDate = sourceDimOnlineService@ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectColumns2",
+				"split1@UpdateCondition2 alterRow(updateIf(true())) ~> AlterRow2",
+				"sourcetOnlineService, sourceDimOnlineService join(sourcetOnlineService@ServiceCode == sourceDimOnlineService@ServiceCode,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinDimOnlineService",
+				"derivedColumn1 split(InsertOrUpdate=='Update',",
+				"     InsertOrUpdate=='Insert',",
+				"     disjoint: false) ~> splitUpdateCondition@(UpdateCondition, InsertCondition)",
+				"selectColumns2 derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC(),",
+				"          InsertOrUpdate = iif(isNull(Target_ServiceCode), 'Insert', 'Update')) ~> derivedColumn1",
+				"splitUpdateCondition@UpdateCondition derive(CreatedDate = Target_CreatedDate) ~> derivedUpdateTime",
+				"derivedUpdateTime alterRow(updateIf(true())) ~> alterRow3",
+				"splitUpdateCondition@InsertCondition alterRow(insertIf(true())) ~> alterRow4",
+				"addMovieStatusName, sourceDimMovie join(sourcetMovies@MovieIdNK == sourceDimMovie@MovieIdNK,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinDimMovie",
+				"addNewColumns1 split(InsertOrUpdate=='Update',",
+				"     InsertOrUpdate=='Insert',",
+				"     disjoint: false) ~> split1@(UpdateCondition2, InsertCondition2)",
+				"split1@InsertCondition2 alterRow(insertIf(true())) ~> alterRow5",
+				"AlterRow2 sink(allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     input(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatus as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['MovieIdNK'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          MovieIdNK,",
+				"          Title,",
+				"          ReleaseDate,",
+				"          Runtime,",
+				"          MovieStatus,",
+				"          CreatedDate = Target_CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> sinkDimMovie",
+				"alterRow3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['ServiceCode'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ServiceCode,",
+				"          ServiceName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> sinkDimOnlineService1",
+				"alterRow4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ServiceCode,",
+				"          ServiceName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> sinkDimOnlineService2",
+				"alterRow5 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatus as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          MovieIdNK,",
+				"          Title,",
+				"          ReleaseDate,",
+				"          Runtime,",
+				"          MovieStatus,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> sinkDimMovie2"
+			]
+		}
+	}
+}

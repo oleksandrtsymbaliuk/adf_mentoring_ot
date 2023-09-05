@@ -1,0 +1,12 @@
+{
+	"name": "LS_ABLB_azurementoringauot",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"serviceEndpoint": "https://azurementoringauot.blob.core.windows.net/",
+			"accountKind": "StorageV2"
+		}
+	}
+}

@@ -1,0 +1,216 @@
+{
+	"name": "ACT_MT_DF_PopulateDimTables_copy1",
+	"properties": {
+		"folder": {
+			"name": "Module 08"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tMovies",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetMovies"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tMovieStatus",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetMovieStatus"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_tOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sourcetOnlineService"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimMovie"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimOnlineService"
+				}
+			],
+			"transformations": [
+				{
+					"name": "addNewColumns1"
+				},
+				{
+					"name": "addMovieStatusName"
+				},
+				{
+					"name": "addMovieKey"
+				},
+				{
+					"name": "selectColumns1"
+				},
+				{
+					"name": "removeDuplicateCols"
+				},
+				{
+					"name": "addServiceKey"
+				},
+				{
+					"name": "addNewColumns2"
+				},
+				{
+					"name": "selectColumns2"
+				},
+				{
+					"name": "AlterRow1"
+				},
+				{
+					"name": "AlterRow2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          MovieId as integer,",
+				"          MovieIdNK as integer,",
+				"          Budget as integer,",
+				"          HomepagePath as string,",
+				"          Title as string,",
+				"          OriginalTitle as string,",
+				"          ReleaseDate as date,",
+				"          Revenue as long,",
+				"          Runtime as integer,",
+				"          MovieStatusId as integer,",
+				"          AvgVote as decimal(3,1),",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp,",
+				"          SrcFileName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     waterMarkColumn: 'ModifiedDate',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetMovies",
+				"source(output(",
+				"          MovieStatusId as integer,",
+				"          MovieStatusName as string,",
+				"          CreatedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetMovieStatus",
+				"source(output(",
+				"          ServiceId as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     waterMarkColumn: 'ModifiedDate',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcetOnlineService",
+				"addMovieKey derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC(),",
+				"          MovieKey = toInteger(MovieKey)) ~> addNewColumns1",
+				"sourcetMovies, sourcetMovieStatus lookup(sourcetMovies@MovieStatusId == sourcetMovieStatus@MovieStatusId,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> addMovieStatusName",
+				"removeDuplicateCols keyGenerate(output(MovieKey as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> addMovieKey",
+				"addNewColumns1 select(mapColumn(",
+				"          MovieKey,",
+				"          MovieIdNK,",
+				"          Title,",
+				"          ReleaseDate,",
+				"          Runtime,",
+				"          MovieStatus = MovieStatusName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectColumns1",
+				"addMovieStatusName select(skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> removeDuplicateCols",
+				"sourcetOnlineService keyGenerate(output(ServiceKey as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> addServiceKey",
+				"addServiceKey derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC(),",
+				"          ServiceKey = toInteger(ServiceKey)) ~> addNewColumns2",
+				"addNewColumns2 select(mapColumn(",
+				"          ServiceKey,",
+				"          ServiceCode,",
+				"          ServiceName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectColumns2",
+				"selectColumns2 alterRow(updateIf(true())) ~> AlterRow1",
+				"selectColumns1 alterRow(upsertIf(true())) ~> AlterRow2",
+				"AlterRow2 sink(allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     input(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatus as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:true,",
+				"     keys:['MovieKey'],",
+				"     format: 'table',",
+				"     preSQLs:['SET IDENTITY_INSERT [dbo].[DimMovie] ON'],",
+				"     postSQLs:['SET IDENTITY_INSERT [dbo].[DimMovie] OFF'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimMovie",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['ServiceCode'],",
+				"     format: 'table',",
+				"     preSQLs:['SET IDENTITY_INSERT [dbo].[DimOnlineService] ON'],",
+				"     postSQLs:['SET IDENTITY_INSERT [dbo].[DimOnlineService] OFF'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimOnlineService"
+			]
+		}
+	}
+}

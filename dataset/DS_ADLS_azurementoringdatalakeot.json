@@ -1,0 +1,59 @@
+{
+	"name": "DS_ADLS_azurementoringdatalakeot",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakeot",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Column_delimiter": {
+				"type": "string"
+			},
+			"Encoding": {
+				"type": "string"
+			},
+			"Quote_character": {
+				"type": "string"
+			},
+			"Escape_character": {
+				"type": "string"
+			},
+			"Path_container": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Module 9"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": {
+					"value": "@dataset().Path_container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": {
+				"value": "@dataset().Column_delimiter",
+				"type": "Expression"
+			},
+			"encodingName": {
+				"value": "@dataset().Encoding",
+				"type": "Expression"
+			},
+			"escapeChar": {
+				"value": "@dataset().Escape_character",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": true,
+			"quoteChar": {
+				"value": "@dataset().Quote_character",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,66 @@
+{
+	"name": "PL_DATA_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_GEN_EPIPE_Copy_Files",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ABLB_source_movies_To_DS_ADLS_sink_raw_movies_new",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_Archive",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_Copy_To_SQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ADLS_Archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ACT_GEN_EPIPE_Copy_To_SQL",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_EPIPE_Copy_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ADLS_To_DS_SQL",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Previous modules"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-25T09:19:04Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

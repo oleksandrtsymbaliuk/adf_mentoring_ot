@@ -1,0 +1,713 @@
+{
+	"name": "PL_DATA_DS_ADLS_To_DS_SQL_metadata_email_notification",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_GEN_LKP_metadata",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Write log start",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQL_tControlMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ACT_ITRC_FOR_metadata_file",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ACT_GEN_LKP_metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('ACT_GEN_LKP_metadata').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "ACT_MT_Copy_To_SQL_metadata",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "pipelineId",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "source_filename",
+											"value": "$$FILEPATH"
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": {
+											"value": "@item().source_path_folder",
+											"type": "Expression"
+										},
+										"wildcardFileName": {
+											"value": "@item().source_path_filename",
+											"type": "Expression"
+										},
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('TRUNCATE TABLE ', item().target_schema, '.', item().target_table)}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": true,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": {
+									"value": "@item().copy_settings_diu",
+									"type": "Expression"
+								},
+								"translator": {
+									"value": "@json(item().copy_settings_mapping)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_azurementoringdatalakeot",
+									"type": "DatasetReference",
+									"parameters": {
+										"Column_delimiter": {
+											"value": "@item().source_file_column_delimiter",
+											"type": "Expression"
+										},
+										"Encoding": {
+											"value": "@item().source_file_encoding",
+											"type": "Expression"
+										},
+										"Quote_character": {
+											"value": "@item().source_file_quote_character",
+											"type": "Expression"
+										},
+										"Escape_character": {
+											"value": "@item().source_file_escape_character",
+											"type": "Expression"
+										},
+										"Path_container": {
+											"value": "@item().source_path_container",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_SQL_metadatadriven",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": {
+											"value": "@item().target_schema",
+											"type": "Expression"
+										},
+										"table": {
+											"value": "@item().target_table",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Write Step Log",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "ACT_MT_Copy_To_SQL_metadata",
+									"dependencyConditions": [
+										"Completed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[write_log]",
+								"storedProcedureParameters": {
+									"activity_name": {
+										"value": "ACT_MT_Copy_To_SQL_metadata",
+										"type": "String"
+									},
+									"activity_run_end": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').ExecutionEndTime",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"activity_run_id": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').ActivityRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"activity_run_start": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').ExecutionStartTime",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"activity_status": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.executionDetails[0].status",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"billing_duration": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.billingReference.billableDuration[0].duration",
+											"type": "Expression"
+										},
+										"type": "Decimal"
+									},
+									"billing_meter_type": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.billingReference.billableDuration[0].meterType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"copy_duration": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.copyDuration",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"pipeline_name": {
+										"value": null,
+										"type": "String"
+									},
+									"pipeline_run_id": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"queue": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.executionDetails[0].detailedDurations.queuingDuration",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"run_end": {
+										"value": null,
+										"type": "DateTime"
+									},
+									"run_start": {
+										"value": null,
+										"type": "DateTime"
+									},
+									"statistics_diu_used": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.usedDataIntegrationUnits",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"statistics_files_processed": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.filesRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"statistics_parallel_copy_used": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.usedParallelCopies",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"statistics_rows_read": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"statistics_rows_write": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"status": {
+										"value": "In progress",
+										"type": "String"
+									},
+									"transfer_duration": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').output.executionDetails[0].detailedDurations.transferDuration",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQL_azure_mentoring_ot_database",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Log Error",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "ACT_MT_Copy_To_SQL_metadata",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[write_log_error]",
+								"storedProcedureParameters": {
+									"activity_name": {
+										"value": "ACT_MT_Copy_To_SQL_metadata",
+										"type": "String"
+									},
+									"datetime": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').ExecutionEndTime",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"error_code": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').StatusCode",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"error_message": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').Error.message",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"failure_type": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').Error.failureType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"pipeline_name": {
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"pipeline_run_id": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"activity_run_id": {
+										"value": {
+											"value": "@activity('ACT_MT_Copy_To_SQL_metadata').ActivityRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQL_azure_mentoring_ot_database",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "SendErrorEmail",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Log Error",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_SendEmail",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"pipeline_name": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"email_receiver": "oleksandr_tsymbaliuk1@epam.com",
+									"email_message": {
+										"value": "@concat('Pipiline ', pipeline().Pipeline, ' with run id ', pipeline().RunId, ' and Activity Id', activity('ACT_MT_Copy_To_SQL_metadata').ActivityRunId, ' has been completed with status: Error. Error details. Error Code: ', activity('ACT_MT_Copy_To_SQL_metadata').StatusCode, '. Error messgae: ', activity('ACT_MT_Copy_To_SQL_metadata').Error.message, '. Failure Type: ', activity('ACT_MT_Copy_To_SQL_metadata').Error.failureType, '.')",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "SendSuccessEmail",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "SendErrorEmail",
+									"dependencyConditions": [
+										"Skipped"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_SendEmail",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"pipeline_name": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"email_receiver": "oleksandr_tsymbaliuk1@epam.com",
+									"email_message": {
+										"value": "@concat('Pipiline ', pipeline().Pipeline, ' with run id ', pipeline().RunId, ' and Activity Id', activity('ACT_MT_Copy_To_SQL_metadata').ActivityRunId, ' has been completed with status: Success.')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Write log start",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[write_log]",
+					"storedProcedureParameters": {
+						"activity_name": {
+							"value": null,
+							"type": "String"
+						},
+						"activity_run_end": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"activity_run_id": {
+							"value": null,
+							"type": "String"
+						},
+						"activity_run_start": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"activity_status": {
+							"value": null,
+							"type": "String"
+						},
+						"billing_duration": {
+							"value": null,
+							"type": "Decimal"
+						},
+						"billing_meter_type": {
+							"value": null,
+							"type": "String"
+						},
+						"copy_duration": {
+							"value": null,
+							"type": "Int32"
+						},
+						"pipeline_name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipeline_run_id": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"queue": {
+							"value": null,
+							"type": "Int32"
+						},
+						"run_end": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"run_start": {
+							"value": {
+								"value": "@utcnow()",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"statistics_diu_used": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_files_processed": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_parallel_copy_used": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_rows_read": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_rows_write": {
+							"value": null,
+							"type": "Int32"
+						},
+						"status": {
+							"value": "In progress",
+							"type": "String"
+						},
+						"transfer_duration": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_azure_mentoring_ot_database",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Write log end",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_ITRC_FOR_metadata_file",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[write_log]",
+					"storedProcedureParameters": {
+						"activity_name": {
+							"value": null,
+							"type": "String"
+						},
+						"activity_run_end": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"activity_run_id": {
+							"value": null,
+							"type": "String"
+						},
+						"activity_run_start": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"activity_status": {
+							"value": null,
+							"type": "String"
+						},
+						"billing_duration": {
+							"value": null,
+							"type": "Decimal"
+						},
+						"billing_meter_type": {
+							"value": null,
+							"type": "String"
+						},
+						"copy_duration": {
+							"value": null,
+							"type": "Int32"
+						},
+						"pipeline_name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipeline_run_id": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"queue": {
+							"value": null,
+							"type": "Int32"
+						},
+						"run_end": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"run_start": {
+							"value": null,
+							"type": "DateTime"
+						},
+						"statistics_diu_used": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_files_processed": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_parallel_copy_used": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_rows_read": {
+							"value": null,
+							"type": "Int32"
+						},
+						"statistics_rows_write": {
+							"value": null,
+							"type": "Int32"
+						},
+						"status": {
+							"value": "Completed",
+							"type": "String"
+						},
+						"transfer_duration": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_azure_mentoring_ot_database",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"variables": {
+			"test": {
+				"type": "String",
+				"defaultValue": "{\"type\":\"TabularTranslator\",\"mappings\":[{\"source\":{\"name\":\"user_id\",\"type\":\"String\",\"physicalType\":\"String\"},\"sink\":{\"name\":\"userId\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}},{\"source\":{\"name\":\"movie_id\",\"type\":\"String\",\"physicalType\":\"String\"},\"sink\":{\"name\":\"movieId\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}},{\"source\":{\"name\":\"rating\",\"type\":\"String\",\"physicalType\":\"String\"},\"sink\":{\"name\":\"rating\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}},{\"source\":{\"name\":\"timestamp\",\"type\":\"String\",\"physicalType\":\"String\"},\"sink\":{\"name\":\"timestamp\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}},{\"source\":{\"name\":\"pipelineId\",\"type\":\"String\"},\"sink\":{\"name\":\"pipelineId\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}},{\"source\":{\"name\":\"source_filename\",\"type\":\"String\"},\"sink\":{\"name\":\"source_filename\",\"type\":\"String\",\"physicalType\":\"nvarchar\"}}],\"typeConversion\":true,\"typeConversionSettings\":{\"allowDataTruncation\":true,\"treatBooleanAsNumber\":false}}"
+			},
+			"email_message": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Module 11"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-05T09:51:12Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,23 @@
+{
+	"name": "LS_SQL_Local",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Data Source=EPPLWARW0229\\MSSQLSERVERDEV;Initial Catalog=CinemaTickets;User ID=oleksandr",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV_mentoring_key_vault_ot",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sql-serve-local-oleksandr-pass"
+			}
+		},
+		"connectVia": {
+			"referenceName": "SHIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

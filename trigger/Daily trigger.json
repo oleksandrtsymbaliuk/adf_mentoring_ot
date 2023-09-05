@@ -1,0 +1,24 @@
+{
+	"name": "Daily trigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DATA_DS_SQL_Local_To_DS_SQL_Cinema",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-07-24T14:32:00",
+				"timeZone": "Central European Standard Time"
+			}
+		}
+	}
+}

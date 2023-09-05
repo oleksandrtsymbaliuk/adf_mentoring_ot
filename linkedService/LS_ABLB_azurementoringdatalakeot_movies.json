@@ -1,0 +1,19 @@
+{
+	"name": "LS_ABLB_azurementoringdatalakeot_movies",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"sasUri": "https://azurementoringstorageot.blob.core.windows.net/movies",
+			"sasToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV_mentoring_key_vault_ot",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "azurementoringstorageot-movies-sas-token"
+			}
+		}
+	}
+}
